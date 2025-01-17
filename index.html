@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic Map - Van Buren County Parcel Viewer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        #map-container {
+            flex-grow: 1;
+            position: relative;
+            height: 100%;
+        }
+        #parcel-viewer {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="map-container">
+        <iframe 
+            id="parcel-viewer"
+            src="https://gis.vanburencountymi.gov/van-buren-county-mi/maps/139519/parcel-viewer?preview=true"
+            title="Van Buren County Parcel Viewer"
+        ></iframe>
+    </div>
+
+    <!-- ChatBase Integration Script -->
+    <script>
+        console.log('Starting ChatBase integration...');
+        
+        (function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="[Script ID]";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
+
+        console.log('ChatBase embed code executed');
+
+        // Wait for ChatBase to be fully loaded
+        const waitForChatbase = setInterval(() => {
+            console.log('Checking for ChatBase initialization...', {
+                chatbaseExists: !!window.chatbase,
+                registerToolsExists: window.chatbase && typeof window.chatbase.registerTools === 'function'
+            });
+
+            if (window.chatbase && typeof window.chatbase.registerTools === 'function') {
+                console.log('ChatBase fully loaded, registering tools...');
+                clearInterval(waitForChatbase);
+                
+                // Register our map update tool
+                window.chatbase.registerTools({
+                    Update_Map_View: async (args) => {
+                        console.log('updateMapView called with args:', args);
+                        
+                        try {
+                            const iframe = document.getElementById('parcel-viewer');
+                            console.log('Found iframe:', !!iframe);
+
+                            const BASE_URL = 'https://gis.vanburencountymi.gov/van-buren-county-mi/maps/139519/parcel-viewer';
+                            const LAYER_ID = 'b386acf6-77e2-11ee-be3d-027d7e0bb32b';
+                            
+                            const newUrl = `${BASE_URL}?field=parcel_no&value=${args.fieldValue}&layer=${LAYER_ID}&preview=true`;
+                            console.log('Updating iframe with URL:', newUrl);
+
+                            iframe.src = newUrl;
+
+                            return {
+                                data: `Successfully updated map to show parcel ${args.fieldValue}`,
+                                status: "success"
+                            };
+                        } catch (error) {
+                            console.error('Error in updateMapView:', error);
+                            return {
+                                status: "error",
+                                message: "Failed to update map view: " + error.message
+                            };
+                        }
+                    }
+                });
+                console.log('Tools registered successfully');
+            }
+        }, 1000);
+    </script>
+
+    <!-- Map Control Script -->
+    <script>
+        console.log('Initializing map control script...');
+        
+        const BASE_URL = 'https://gis.vanburencountymi.gov/van-buren-county-mi/maps/139519/parcel-viewer';
+        const LAYER_ID = 'b386acf6-77e2-11ee-be3d-027d7e0bb32b';
+
+        // This function is kept for manual testing purposes
+        function updateMapView(fieldName, fieldValue) {
+            console.log('Manual updateMapView called:', { fieldName, fieldValue });
+            
+            const iframe = document.getElementById('parcel-viewer');
+            const newUrl = `${BASE_URL}?field=${fieldName}&value=${fieldValue}&layer=${LAYER_ID}&preview=true`;
+            console.log('Updating iframe with URL:', newUrl);
+            
+            iframe.src = newUrl;
+        }
+
+        console.log('Map control script initialized');
+    </script>
+</body>
+</html>

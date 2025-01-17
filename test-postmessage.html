@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PostMessage Test</title>
+</head>
+<body>
+    <div id="map-container">
+        <iframe 
+            id="parcel-viewer"
+            src="https://gis.vanburencountymi.gov/van-buren-county-mi/maps/139519/parcel-viewer?preview=true"
+            title="Van Buren County Parcel Viewer"
+            style="width: 100%; height: 800px; border: none;"
+        ></iframe>
+    </div>
+
+    <button onclick="testPostMessage()">Test PostMessage</button>
+    <pre id="log"></pre>
+
+    <script>
+        function log(message) {
+            console.log(message);
+            document.getElementById('log').textContent += message + '\n';
+        }
+
+        // Listen for any messages from the iframe
+        window.addEventListener('message', function(event) {
+            log('Received message from iframe:');
+            log(JSON.stringify(event.data, null, 2));
+        });
+
+        function testPostMessage() {
+            const iframe = document.getElementById('parcel-viewer');
+            const targetOrigin = 'https://gis.vanburencountymi.gov';
+
+            // Try different message formats that might be recognized
+            const messages = [
+                // Basic test message
+                { type: 'test', message: 'Hello iframe!' },
+                
+                // Try to simulate a search action
+                { 
+                    action: 'search',
+                    parcelNumber: '80-14-021-006-00'
+                },
+                
+                // Try to simulate input
+                {
+                    action: 'setValue',
+                    elementId: 'CB0DA6C4-FF40-0001-BD62-1A6B14001FBB',
+                    value: '80-14-021-006-00'
+                }
+            ];
+
+            messages.forEach((msg, index) => {
+                setTimeout(() => {
+                    log(`Sending message ${index + 1}:`);
+                    log(JSON.stringify(msg, null, 2));
+                    
+                    try {
+                        iframe.contentWindow.postMessage(msg, targetOrigin);
+                    } catch (error) {
+                        log(`Error sending message ${index + 1}: ${error.message}`);
+                    }
+                }, index * 1000);
+            });
+        }
+    </script>
+</body>
+</html>
